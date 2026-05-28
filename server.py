@@ -88,7 +88,16 @@ mcp = FastMCP(
 )
 
 
-@mcp.tool(output_schema=SearchOutput.model_json_schema())
+@mcp.tool(
+    output_schema=SearchOutput.model_json_schema(),
+    annotations={
+        "title": "Search",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
 async def search(query: str) -> dict[str, Any]:
     """
     Search for relevant documents/items.
@@ -114,7 +123,16 @@ async def search(query: str) -> dict[str, Any]:
     }
 
 
-@mcp.tool(output_schema=FetchOutput.model_json_schema())
+@mcp.tool(
+    output_schema=FetchOutput.model_json_schema(),
+    annotations={
+        "title": "Fetch",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
 async def fetch(id: str) -> dict[str, Any]:
     """
     Fetch a document/item by ID.
@@ -136,7 +154,45 @@ async def fetch(id: str) -> dict[str, Any]:
             "Replace the fetch() body in server.py with your real data retrieval."
         ),
     }
+class MoveFileOutput(BaseModel):
+    ok: bool
+    file_id: str
+    destination_folder_id: str
+    message: str
 
+
+@mcp.tool(
+    output_schema=MoveFileOutput.model_json_schema(),
+    annotations={
+        "title": "Move File",
+        "readOnlyHint": False,
+        "destructiveHint": False,
+        "idempotentHint": False,
+        "openWorldHint": True,
+    },
+)
+async def move_file(file_id: str, destination_folder_id: str) -> dict[str, Any]:
+    """
+    Move a file/document into a destination folder.
+
+    Args:
+        file_id: The ID of the file to move.
+        destination_folder_id: The ID of the destination folder.
+
+    Returns:
+        Confirmation that the file was moved.
+    """
+
+    # TODO: Replace this placeholder with your real Google Drive move logic.
+    return {
+        "ok": True,
+        "file_id": file_id,
+        "destination_folder_id": destination_folder_id,
+        "message": (
+            "Move tool is registered, but real Google Drive move logic "
+            "still needs to be connected in server.py."
+        ),
+    }
 
 # ---------------------------------------------------------------------
 # FastMCP ASGI app, mounted with explicit streamable-http transport
@@ -161,6 +217,7 @@ app.add_middleware(
     allow_credentials=False,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
+    
 )
 
 
