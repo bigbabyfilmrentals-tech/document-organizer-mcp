@@ -208,7 +208,6 @@ class MoveFileOutput(BaseModel):
     "idempotentHint": False,
     "openWorldHint": True,
 },
-    },
 )
 async def move_file(file_id: str, destination_folder_id: str) -> dict[str, Any]:
     """
