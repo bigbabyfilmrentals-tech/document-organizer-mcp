@@ -201,12 +201,13 @@ class MoveFileOutput(BaseModel):
         "clearly provided the exact file_id and destination_folder_id for this call. "
         "This action changes the file's folder location and should require user approval."
     ),
-    annotations={
-        "title": "Move File",
-        "readOnlyHint": False,
-        "destructiveHint": False,
-        "idempotentHint": False,
-        "openWorldHint": True,
+    aannotations={
+    "title": "Move File",
+    "readOnlyHint": False,
+    "destructiveHint": True,
+    "idempotentHint": False,
+    "openWorldHint": True,
+},
     },
 )
 async def move_file(file_id: str, destination_folder_id: str) -> dict[str, Any]:
