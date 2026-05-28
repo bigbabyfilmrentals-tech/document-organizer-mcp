@@ -160,6 +160,7 @@ class MoveFileOutput(BaseModel):
     destination_folder_id: str
     message: str
 
+
 @mcp.tool(
     name="move_file",
     description=(
@@ -180,27 +181,60 @@ class MoveFileOutput(BaseModel):
 )
 async def move_file(file_id: str, destination_folder_id: str) -> dict[str, Any]:
     """
-    Move a file/document into a destination folder.
+    Move one Google Drive file/document into one destination folder.
 
     Args:
-        file_id: The ID of the file to move.
-        destination_folder_id: The ID of the destination folder.
+        file_id: The exact Google Drive file ID to move.
+        destination_folder_id: The exact Google Drive folder ID to move the file into.
 
     Returns:
-        Confirmation that the file was moved.
+        Confirmation that the file was moved, or an error message.
     """
 
-    # TODO: Replace this placeholder with your real Google Drive move logic.
-    return {
-        "ok": True,
-        "file_id": file_id,
-        "destination_folder_id": destination_folder_id,
-        "message": (
-            "Move tool is registered, but real Google Drive move logic "
-            "still needs to be connected in server.py."
-        ),
-    }
+    try:
+        drive_service = get_drive_service()
 
+        file_metadata = drive_service.files().get(
+            fileId=file_id,
+            fields="id, name, parents, webViewLink",
+            supportsAllDrives=True,
+        ).execute()
+
+        previous_parents = ",".join(file_metadata.get("parents", []))
+
+        moved_file = drive_service.files().update(
+            fileId=file_id,
+            addParents=destination_folder_id,
+            removeParents=previous_parents,
+            fields="id, name, parents, webViewLink",
+            supportsAllDrives=True,
+        ).execute()
+
+        return {
+            "ok": True,
+            "file_id": moved_file["id"],
+            "destination_folder_id": destination_folder_id,
+            "message": (
+                f"Moved '{moved_file.get('name', file_id)}' "
+                f"to folder {destination_folder_id}."
+            ),
+        }
+
+    except HttpError as error:
+        return {
+            "ok": False,
+            "file_id": file_id,
+            "destination_folder_id": destination_folder_id,
+            "message": f"Google Drive API error: {error}",
+        }
+
+    except Exception as error:
+        return {
+            "ok": False,
+            "file_id": file_id,
+            "destination_folder_id": destination_folder_id,
+            "message": f"Move failed: {error}",
+        }
 # ---------------------------------------------------------------------
 # FastMCP ASGI app, mounted with explicit streamable-http transport
 # ---------------------------------------------------------------------
