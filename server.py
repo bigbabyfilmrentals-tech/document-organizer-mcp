@@ -160,9 +160,16 @@ class MoveFileOutput(BaseModel):
     destination_folder_id: str
     message: str
 
-
 @mcp.tool(
-    output_schema=MoveFileOutput.model_json_schema(),
+    name="move_file",
+    description=(
+        "Use this when the user explicitly asks to move, organize, file, relocate, "
+        "or place one document/file into a specific destination folder. "
+        "Do not use this to search for files, read file contents, rename files, "
+        "delete files, create folders, or move multiple files unless the user has "
+        "clearly provided the exact file_id and destination_folder_id for this call. "
+        "This action changes the file's folder location and should require user approval."
+    ),
     annotations={
         "title": "Move File",
         "readOnlyHint": False,
@@ -170,6 +177,7 @@ class MoveFileOutput(BaseModel):
         "idempotentHint": False,
         "openWorldHint": True,
     },
+)
 )
 async def move_file(file_id: str, destination_folder_id: str) -> dict[str, Any]:
     """
