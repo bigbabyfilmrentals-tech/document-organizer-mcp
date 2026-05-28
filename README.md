@@ -51,6 +51,13 @@ Once you are comfortable, the next upgrade should be adding authentication.
 - `.pdf`
 - `.docx`
 - `.xlsx`
+- `.jpg`
+- `.jpeg`
+- `.heic`
+- `.mov`
+
+For `.jpg`, `.jpeg`, `.heic`, and `.mov`, this version supports listing, inspecting, renaming, and moving.
+It does not yet do OCR on images or transcript extraction from video.
 
 ## Project layout
 
@@ -79,7 +86,7 @@ export DOC_ROOT=/workspace/document-organizer-mcp/data
 Optional: restrict which extensions are searchable.
 
 ```bash
-export DOC_EXTENSIONS=.pdf,.docx,.md,.txt
+export DOC_EXTENSIONS=.pdf,.docx,.md,.txt,.xlsx,.csv,.json,.jpg,.jpeg,.heic,.mov
 ```
 
 ## Run locally
@@ -236,7 +243,7 @@ Use these values:
 
 Optional:
 
-- `DOC_EXTENSIONS` = `.pdf,.docx,.md,.txt,.xlsx,.csv,.json`
+- `DOC_EXTENSIONS` = `.pdf,.docx,.md,.txt,.xlsx,.csv,.json,.jpg,.jpeg,.heic,.mov`
 - `GOOGLE_DRIVE_ACCESS_TOKEN` = your temporary OAuth access token if you want Drive read access
 
 ### 5. Deploy
