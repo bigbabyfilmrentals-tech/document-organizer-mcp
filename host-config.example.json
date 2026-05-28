@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "document-organizer": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/workspace/document-organizer-mcp",
+        "python",
+        "server.py"
+      ],
+      "env": {
+        "DOC_ROOT": "/workspace",
+        "DOC_EXTENSIONS": ".pdf,.docx,.md,.txt,.xlsx,.csv,.json",
+        "GOOGLE_DRIVE_ACCESS_TOKEN": ""
+      }
+    }
+  }
+}

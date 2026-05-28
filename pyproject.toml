@@ -1,0 +1,20 @@
+[project]
+name = "document-organizer-mcp"
+version = "0.1.0"
+description = "A starter MCP server that helps an agent organize and inspect documents."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "mcp[cli]>=1.9.0",
+  "pydantic>=2.7.0",
+  "python-docx>=1.1.2",
+  "pypdf>=5.0.0",
+  "openpyxl>=3.1.5",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = false
