@@ -1,13 +1,12 @@
 services:
   - type: web
-    name: document-organizer-mcp
-    runtime: docker
-    plan: starter
-    autoDeploy: false
+    name: workspace-mcp-server
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python server.py
     envVars:
-      - key: HOST
-        value: 0.0.0.0
-      - key: PORT
-        value: 8000
-      - key: DOC_ROOT
-        value: /app/data
+      - key: MCP_TRANSPORT
+        value: streamable-http
+      - key: PYTHON_VERSION
+        value: 3.12.13

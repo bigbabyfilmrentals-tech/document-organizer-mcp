@@ -21,6 +21,9 @@ from mcp.server.fastmcp import FastMCP
 WORKSPACE_ROOT = Path(__file__).resolve().parent
 SERVER_NAME = os.getenv("MCP_SERVER_NAME", "Workspace MCP Server")
 TRANSPORT = os.getenv("MCP_TRANSPORT", "stdio").strip().lower()
+IS_RENDER = os.getenv("RENDER", "").lower() == "true"
+HOST = os.getenv("MCP_HOST", "0.0.0.0" if IS_RENDER else "127.0.0.1")
+PORT = int(os.getenv("PORT", os.getenv("MCP_PORT", "10000" if IS_RENDER else "8000")))
 
 mcp = FastMCP(
     SERVER_NAME,
@@ -30,6 +33,8 @@ mcp = FastMCP(
     ),
     json_response=True,
     stateless_http=TRANSPORT == "streamable-http",
+    host=HOST,
+    port=PORT,
 )
 
 
@@ -80,6 +85,8 @@ def server_info() -> str:
     payload = {
         "name": SERVER_NAME,
         "transport": TRANSPORT,
+        "host": HOST,
+        "port": PORT,
         "workspace_root": str(WORKSPACE_ROOT),
         "available_tools": [
             "echo",
