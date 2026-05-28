@@ -7,11 +7,11 @@ import shutil
 import urllib.parse
 import urllib.request
 from collections import Counter
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp.server import TransportSecuritySettings
 from pydantic import BaseModel
 
 
@@ -24,9 +24,16 @@ DEFAULT_ALLOWED_EXTENSIONS = {
     ".pdf",
     ".docx",
     ".xlsx",
+    ".jpg",
+    ".jpeg",
+    ".heic",
+    ".mov",
 }
 
 mcp = FastMCP(APP_NAME, json_response=True)
+mcp.settings.transport_security = TransportSecuritySettings(
+    enable_dns_rebinding_protection=False
+)
 
 
 class FileMatch(BaseModel):
@@ -154,6 +161,8 @@ def _extract_text(path: Path) -> str:
         return _read_docx_file(path)
     if suffix == ".xlsx":
         return _read_xlsx_file(path)
+    if suffix in {".jpg", ".jpeg", ".heic", ".mov"}:
+        return ""
     raise ValueError(f"Unsupported file type: {suffix}")
 
 
@@ -619,8 +628,46 @@ def fetch(id: str) -> str:
 
 
 if __name__ == "__main__":
+    import uvicorn
+    from starlette.applications import Starlette
+    from starlette.responses import JSONResponse
+    from starlette.routing import Route
+
     host = os.environ.get("HOST", "0.0.0.0")
     port = int(os.environ.get("PORT", "8000"))
+
     mcp.settings.host = host
     mcp.settings.port = port
-    mcp.run(transport="streamable-http")
+
+    streamable_app = mcp.streamable_http_app()
+    sse_app = mcp.sse_app()
+
+    async def root_endpoint(request) -> JSONResponse:
+        base = str(request.base_url).rstrip("/")
+        return JSONResponse(
+            {
+                "server": APP_NAME,
+                "status": "ok",
+                "endpoints": {
+                    "streamable_http": f"{base}/mcp",
+                    "sse": f"{base}/sse",
+                    "sse_messages": f"{base}/messages/",
+                },
+            }
+        )
+
+    combined_app = Starlette(
+        debug=mcp.settings.debug,
+        routes=[Route("/", endpoint=root_endpoint, methods=["GET", "HEAD"])]
+        + list(streamable_app.routes)
+        + list(sse_app.routes),
+        middleware=list(streamable_app.user_middleware) + list(sse_app.user_middleware),
+        lifespan=streamable_app.router.lifespan_context,
+    )
+
+    uvicorn.run(
+        combined_app,
+        host=host,
+        port=port,
+        log_level=mcp.settings.log_level.lower(),
+    )
