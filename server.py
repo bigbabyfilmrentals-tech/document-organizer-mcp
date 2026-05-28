@@ -183,33 +183,107 @@ def get_drive_service():
     return build("drive", "v3", credentials=credentials)
 
 
-class MoveFileOutput(BaseModel):
+class ChangeFileOutput(BaseModel):
     ok: bool
     file_id: str
-    destination_folder_id: str
     message: str
+    name: str | None = None
+    destination_folder_id: str | None = None
+    webViewLink: str | None = None
 
 
 @mcp.tool(
-    name="move_file",
-    output_schema=MoveFileOutput.model_json_schema(),
+    name="change_google_drive_file",
+    output_schema=ChangeFileOutput.model_json_schema(),
     description=(
-        "Use this when the user explicitly asks to move, organize, file, relocate, "
-        "or place one document/file into a specific destination folder. "
-        "Do not use this to search for files, read file contents, rename files, "
-        "delete files, create folders, or move multiple files unless the user has "
-        "clearly provided the exact file_id and destination_folder_id for this call. "
-        "This action changes the file's folder location and should require user approval."
+        "This tool CHANGES a Google Drive file. "
+        "It can move a file to another folder and/or rename a file. "
+        "This is a write action. Use only when the user provides the exact file_id. "
+        "For moving, destination_folder_id is required. "
+        "For renaming, new_name is required. "
+        "Do not use this to search, fetch, read, delete, or create files."
     ),
     annotations={
-    "title": "Move File",
-    "readOnlyHint": False,
-    "destructiveHint": True,
-    "idempotentHint": False,
-    "openWorldHint": True,
-},
+        "title": "Change Google Drive File",
+        "readOnlyHint": False,
+        "destructiveHint": True,
+        "idempotentHint": False,
+        "openWorldHint": True,
+    },
 )
-async def move_file(file_id: str, destination_folder_id: str) -> dict[str, Any]:
+async def change_google_drive_file(
+    file_id: str,
+    destination_folder_id: str | None = None,
+    new_name: str | None = None,
+) -> dict[str, Any]:
+    try:
+        if not destination_folder_id and not new_name:
+            return {
+                "ok": False,
+                "file_id": file_id,
+                "message": "No change requested. Provide destination_folder_id and/or new_name.",
+            }
+
+        drive_service = get_drive_service()
+
+        file_metadata = drive_service.files().get(
+            fileId=file_id,
+            fields="id, name, parents, webViewLink",
+            supportsAllDrives=True,
+        ).execute()
+
+        update_kwargs = {
+            "fileId": file_id,
+            "fields": "id, name, parents, webViewLink",
+            "supportsAllDrives": True,
+        }
+
+        body = {}
+        if new_name:
+            body["name"] = new_name
+
+        if body:
+            update_kwargs["body"] = body
+
+        if destination_folder_id:
+            previous_parents = ",".join(file_metadata.get("parents", []))
+            update_kwargs["addParents"] = destination_folder_id
+            update_kwargs["removeParents"] = previous_parents
+
+        changed_file = drive_service.files().update(**update_kwargs).execute()
+
+        changes = []
+        if destination_folder_id:
+            changes.append(f"moved to folder {destination_folder_id}")
+        if new_name:
+            changes.append(f"renamed to '{new_name}'")
+
+        return {
+            "ok": True,
+            "file_id": changed_file["id"],
+            "name": changed_file.get("name"),
+            "destination_folder_id": destination_folder_id,
+            "webViewLink": changed_file.get("webViewLink"),
+            "message": f"Changed file: {', '.join(changes)}.",
+        }
+
+    except HttpError as error:
+        return {
+            "ok": False,
+            "file_id": file_id,
+            "destination_folder_id": destination_folder_id,
+            "message": f"Google Drive API error: {error}",
+        }
+
+    except Exception as error:
+        return {
+            "ok": False,
+            "file_id": file_id,
+            "destination_folder_id": destination_folder_id,
+            "message": f"Change failed: {error}",
+        },
+)
+async def change_google_drive_file(file_id: str, destination_folder_id: str) -> dict[str, Any]:
     """
     Move one Google Drive file/document into one destination folder.
 
