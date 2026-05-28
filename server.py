@@ -178,7 +178,6 @@ class MoveFileOutput(BaseModel):
         "openWorldHint": True,
     },
 )
-)
 async def move_file(file_id: str, destination_folder_id: str) -> dict[str, Any]:
     """
     Move a file/document into a destination folder.
