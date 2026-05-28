@@ -201,7 +201,7 @@ class MoveFileOutput(BaseModel):
         "clearly provided the exact file_id and destination_folder_id for this call. "
         "This action changes the file's folder location and should require user approval."
     ),
-    aannotations={
+    annotations={
     "title": "Move File",
     "readOnlyHint": False,
     "destructiveHint": True,
