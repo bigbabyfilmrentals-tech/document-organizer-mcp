@@ -192,6 +192,7 @@ class MoveFileOutput(BaseModel):
 
 @mcp.tool(
     name="move_file",
+    output_schema=MoveFileOutput.model_json_schema(),
     description=(
         "Use this when the user explicitly asks to move, organize, file, relocate, "
         "or place one document/file into a specific destination folder. "
