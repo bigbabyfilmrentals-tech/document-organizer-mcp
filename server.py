@@ -39,6 +39,7 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
+DRIVE_SCOPES = ["https://www.googleapis.com/auth/drive"]
 
 APP_NAME = os.getenv("APP_NAME", "Big Baby MCP Server")
 APP_VERSION = os.getenv("APP_VERSION", "1.0.0")
@@ -161,7 +162,7 @@ async def fetch(id: str) -> dict[str, Any]:
             "Replace the fetch() body in server.py with your real data retrieval."
         ),
     }
-    DRIVE_SCOPES = ["https://www.googleapis.com/auth/drive"]
+    
 
 
 def get_drive_service():
