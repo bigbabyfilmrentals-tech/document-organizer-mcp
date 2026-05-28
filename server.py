@@ -24,6 +24,7 @@ OpenAI / MCP server URL:
 from __future__ import annotations
 
 import os
+
 from typing import Any
 
 from fastapi import FastAPI
@@ -31,6 +32,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastmcp import FastMCP
 from pydantic import BaseModel, Field
+
+import json
+
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 
 
 APP_NAME = os.getenv("APP_NAME", "Big Baby MCP Server")
@@ -154,6 +161,27 @@ async def fetch(id: str) -> dict[str, Any]:
             "Replace the fetch() body in server.py with your real data retrieval."
         ),
     }
+    DRIVE_SCOPES = ["https://www.googleapis.com/auth/drive"]
+
+
+def get_drive_service():
+    raw_credentials = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
+
+    if not raw_credentials:
+        raise RuntimeError(
+            "Missing GOOGLE_SERVICE_ACCOUNT_JSON environment variable."
+        )
+
+    service_account_info = json.loads(raw_credentials)
+
+    credentials = service_account.Credentials.from_service_account_info(
+        service_account_info,
+        scopes=DRIVE_SCOPES,
+    )
+
+    return build("drive", "v3", credentials=credentials)
+
+
 class MoveFileOutput(BaseModel):
     ok: bool
     file_id: str
